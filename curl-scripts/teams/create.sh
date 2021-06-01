@@ -1,17 +1,17 @@
 #!/bin/bash
 
 API="http://localhost:4741"
-URL_PATH="/sign-up"
+URL_PATH="/teams"
 
 curl "${API}${URL_PATH}" \
   --include \
   --request POST \
   --header "Content-Type: application/json" \
+  --header "Authorization: Bearer ${TOKEN}" \
   --data '{
-    "credentials": {
-      "email": "'"${EM}"'",
-      "password": "'"${PW}"'",
-      "password_confirmation": "'"${PW}"'"
+    "team": {
+      "title": "'"${TITLE}"'",
+      "pokemons": []
     }
   }'
 
