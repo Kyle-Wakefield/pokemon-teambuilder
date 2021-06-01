@@ -35,8 +35,11 @@ const router = express.Router()
 // GET /teams/:id/pokemons
 router.get('/teams/:id/pokemons', requireToken, (req, res, next) => {
   Team.findById(req.params.id)
+    // check if the team was found
     .then(handle404)
-    // if findById is successful, send the team's pokemons array down the promise chain
+    // check if the user owns the team
+    .then(team => requireOwnership(req, team))
+    // send the team's pokemons array down the promise chain
     .then(team => team.pokemons)
     // respond with status 200 and JSON of the pokemons
     .then(pokemons => res.status(200).json({ pokemons: pokemons }))
@@ -49,7 +52,10 @@ router.get('/teams/:id/pokemons', requireToken, (req, res, next) => {
 router.get('/pokemons/:id', requireToken, (req, res, next) => {
   // req.params.id will be set based on the `:id` in the route
   Pokemon.findById(req.params.id)
+    // check if the pokemon was found
     .then(handle404)
+    // check if the user owns the pokemon
+    .then(pokemon => requireOwnership(req, pokemon))
     // if `findById` is successful, respond with 200 and "pokemon" JSON
     .then(pokemon => res.status(200).json({ pokemon: pokemon.toObject() }))
     // if an error occurs, pass it to the handler
@@ -62,7 +68,7 @@ router.post('/teams/:id/pokemons', requireToken, (req, res, next) => {
   req.body.pokemon.owner = req.user.id
 
   Team.findById(req.params.id)
-    // check if a team was found
+    // check if the team was found
     .then(handle404)
     // check if the user owns the team
     .then(team => requireOwnership(req, team))
@@ -85,42 +91,75 @@ router.post('/teams/:id/pokemons', requireToken, (req, res, next) => {
 })
 
 // UPDATE
-// PATCH /pokemons/:id
-router.patch('/pokemons/:id', requireToken, removeBlanks, (req, res, next) => {
-  // if the client attempts to change the `owner` property by including a new
-  // owner, prevent that by deleting that key/value pair
-  delete req.body.pokemon.owner
-
-  Pokemon.findById(req.params.id)
+// PATCH /teams/:teamId/pokemons/:pokemonId
+router.patch('/teams/:teamId/pokemons/:pokemonId', requireToken, removeBlanks, (req, res, next) => {
+  Team.findById(req.params.teamId)
+    // check if the team was found
     .then(handle404)
-    .then(pokemon => {
-      // pass the `req` object and the Mongoose record to `requireOwnership`
-      // it will throw an error if the current user isn't the owner
-      requireOwnership(req, pokemon)
-
-      // pass the result of Mongoose's `.update` to the next `.then`
-      return pokemon.updateOne(req.body.pokemon)
+    // check if the user owns the team
+    .then(team => requireOwnership(req, team))
+    // find the pokemon to update
+    .then(team => {
+      Pokemon.findById(req.params.pokemonId)
+        // check if the pokemon was found
+        .then(handle404)
+        // check if the user owns the pokemon
+        .then(pokemon => requireOwnership(req, pokemon))
+        .then(pokemon => {
+          // find the pokemon in the team's pokemon array
+          const indexToUpdate = team.pokemons.findIndex(element => element._id.toString() === pokemon._id.toString())
+          // throw an error if the pokemon isn't in the team's pokemons array
+          if (indexToUpdate < 0) {
+            throw new customErrors.PokemonError('Cannot update pokemon, pokemon does not match team')
+          }
+          // update the pokemon in the array and the database
+          pokemon.set(req.body.pokemon)
+          pokemon.save()
+          team.pokemons[indexToUpdate] = pokemon
+          team.save()
+          return pokemon
+        })
+        .then((pokemon) => {
+          res.status(200).json({ pokemon: pokemon.toObject() })
+        })
     })
-    // if that succeeded, return 204 and no JSON
-    .then(() => res.sendStatus(204))
     // if an error occurs, pass it to the handler
+    // send back 204 and no content if the deletion succeeded
     .catch(next)
 })
 
 // DESTROY
-// DELETE /pokemons/:id
-router.delete('/pokemons/:id', requireToken, (req, res, next) => {
-  Pokemon.findById(req.params.id)
+// DELETE /teams/:teamId/pokemons/:pokemonId
+router.delete('/teams/:teamId/pokemons/:pokemonId', requireToken, (req, res, next) => {
+  Team.findById(req.params.teamId)
+    // check if the team was found
     .then(handle404)
-    .then(pokemon => {
-      // throw an error if current user doesn't own `pokemon`
-      requireOwnership(req, pokemon)
-      // delete the pokemon ONLY IF the above didn't throw
-      pokemon.deleteOne()
+    // check if the user owns the team
+    .then(team => requireOwnership(req, team))
+    // if the team passes the checks above, find the pokemon to remove
+    .then(team => {
+      Pokemon.findById(req.params.pokemonId)
+        // check if the pokemon was found
+        .then(handle404)
+        // check if the user owns the pokemon
+        .then(pokemon => requireOwnership(req, pokemon))
+        .then(pokemon => {
+          // find the pokemon in the team's pokemon array
+          const indexToDelete = team.pokemons.findIndex(element => element._id.toString() === pokemon._id.toString())
+          // throw an error if the pokemon isn't in the team's pokemons array
+          if (indexToDelete < 0) {
+            throw new customErrors.PokemonError('Cannot delete pokemon, pokemon does not match team')
+          }
+          // remove the pokemon from the array and delete the pokemon from the database
+          team.pokemons.splice(indexToDelete, 1)
+          pokemon.deleteOne()
+          team.save()
+          res.sendStatus(204)
+        })
+        .catch(next)
     })
-    // send back 204 and no content if the deletion succeeded
-    .then(() => res.sendStatus(204))
     // if an error occurs, pass it to the handler
+    // send back 204 and no content if the deletion succeeded
     .catch(next)
 })
 
