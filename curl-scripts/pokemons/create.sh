@@ -1,7 +1,7 @@
 #!/bin/bash
 
 API="http://localhost:4741"
-URL_PATH="/pokemons"
+URL_PATH="/teams/${ID}/pokemons"
 
 curl "${API}${URL_PATH}" \
   --include \
@@ -14,8 +14,7 @@ curl "${API}${URL_PATH}" \
       "species": "'"${SPECIES}"'",
       "ability": "'"${ABILITY}"'",
       "moves": ["'"${M1}"'", "'"${M2}"'", "'"${M3}"'", "'"${M4}"'"]
-    },
-    "team": "'"${TEAM}"'"
+    }
   }'
 
 echo

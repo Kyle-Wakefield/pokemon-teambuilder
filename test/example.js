@@ -91,7 +91,7 @@ describe('Examples', () => {
         })
     })
 
-    it('should be succesful if you own the resource', done => {
+    it('should be successful if you own the resource', done => {
       chai.request(server)
         .delete('/examples/' + exampleId)
         .set('Authorization', `Bearer ${token}`)

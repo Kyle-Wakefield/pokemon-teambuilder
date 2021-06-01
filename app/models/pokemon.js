@@ -16,9 +16,19 @@ const pokemonSchema = new mongoose.Schema({
   moves: {
     type: [String],
     required: true
+  },
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   }
 }, {
   timestamps: true
 })
 
-module.exports = pokemonSchema
+const Pokemon = mongoose.model('Pokemon', pokemonSchema)
+
+module.exports = {
+  pokemonSchema,
+  Pokemon
+}

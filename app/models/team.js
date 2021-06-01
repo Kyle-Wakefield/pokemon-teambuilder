@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const pokemonSchema = require('./pokemon.js')
+const pokemon = require('./pokemon.js')
 
 const teamSchema = new mongoose.Schema({
   title: {
@@ -7,7 +7,7 @@ const teamSchema = new mongoose.Schema({
     required: true
   },
   pokemons: {
-    type: [pokemonSchema],
+    type: [pokemon.pokemonSchema],
     required: true
   },
   owner: {
