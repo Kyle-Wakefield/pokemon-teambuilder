@@ -21,4 +21,4 @@ const pokemonSchema = new mongoose.Schema({
   timestamps: true
 })
 
-module.exports = mongoose.model('Pokemon', pokemonSchema)
+module.exports = pokemonSchema
