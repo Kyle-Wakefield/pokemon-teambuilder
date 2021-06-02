@@ -20,7 +20,7 @@ const router = express.Router()
 
 // get all species names that contain a string
 router.get('/names', (req, res, next) => {
-  const filteredNames = names.filter(name => name.includes(req.body.searchString))
+  const filteredNames = names.filter(name => name.includes(req.body.searchString.toLowerCase()))
   // capitalize the names, including characters after a " " or "-" (ex: mr. mime => Mr. Mime, ho-oh => Ho-Oh)
   const capitalizedNames = filteredNames.map(name => {
     let capitalizedName = name.charAt(0).toUpperCase() + name.slice(1)
