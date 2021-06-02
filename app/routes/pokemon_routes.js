@@ -74,7 +74,7 @@ router.post('/teams/:id/pokemons', requireToken, (req, res, next) => {
     .then(team => requireOwnership(req, team))
     // check if the team has space for another pokemon
     .then(requireTeamSlot)
-    // If the team passes the checks above, create a new pokemon and add it to the team
+    // create a new pokemon and add it to the team
     .then(team => {
       Pokemon.create(req.body.pokemon)
       // respond to successful `create` with status 201 and JSON of new "pokemon"

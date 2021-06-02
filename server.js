@@ -8,6 +8,7 @@ const exampleRoutes = require('./app/routes/example_routes')
 const userRoutes = require('./app/routes/user_routes')
 const teamRoutes = require('./app/routes/team_routes')
 const pokemonRoutes = require('./app/routes/pokemon_routes')
+const dataRoutes = require('./app/routes/data_routes')
 
 // require middleware
 const errorHandler = require('./lib/error_handler')
@@ -62,6 +63,7 @@ app.use(exampleRoutes)
 app.use(userRoutes)
 app.use(teamRoutes)
 app.use(pokemonRoutes)
+app.use(dataRoutes)
 
 // register error handling middleware
 // note that this comes after the route middlewares, because it needs to be
